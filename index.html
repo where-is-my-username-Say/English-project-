@@ -346,6 +346,31 @@ body.showcase-live #intro,body.showcase-live #compatStage{visibility:hidden}
 body:not(.room-entered) #srcCard,body.showcase-live #srcCard,body.view-screen #srcCard{opacity:0;pointer-events:none;visibility:hidden}
 @media(max-width:760px){#panel{transform:none}#srcCard{left:10px;top:86px;transform:none;width:112px;padding:8px;gap:5px}#srcName,#srcKind{display:none}#srcCard small{font-size:8px}#srcLink{font-size:10px;min-height:30px}}
 @media(max-height:520px) and (orientation:landscape){#srcCard{top:66px;transform:none;width:120px;padding:8px;gap:5px}#srcName{display:none}#srcCard small{font-size:8px}}
+
+/* ===== v7: particles, part labels, clean screen view, showcase skip ===== */
+body::before{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 54%,transparent 50%,rgba(0,0,0,.36) 100%)}
+#world canvas{filter:saturate(1.12) contrast(1.04)}
+#partsLayer{position:fixed;inset:0;z-index:7;pointer-events:none;overflow:hidden}
+body.showcase-live #partsLayer{z-index:100;display:block}
+body:not(.showcase-live) #partsLayer,body:has(dialog[open]) #partsLayer,body:has(#wr.on,#vw.on) #partsLayer{display:none}
+.pt{position:absolute;left:0;top:0;opacity:0;will-change:transform,opacity}
+.pt-line{position:absolute;left:0;top:0;width:0;height:0;border-top:1.5px solid var(--room-accent,#e3b773);transform-origin:0 0;filter:drop-shadow(0 0 4px var(--room-accent,#e3b773))}
+.pt-line::after{content:"";position:absolute;left:-2px;top:-5.25px;border-right:9px solid var(--room-accent,#e3b773);border-top:4.5px solid transparent;border-bottom:4.5px solid transparent}
+.pt-lab{position:absolute;left:0;top:0;width:max-content;max-width:min(210px,44vw);font:500 12px/1.35 Georgia,serif;color:var(--room-text,#fff0d9);background:color-mix(in srgb,var(--room-deep,#0d1b1d) 74%,transparent);border:1px solid var(--room-line,#c1a76a66);padding:5px 10px;border-radius:12px;backdrop-filter:blur(6px)}
+@media (max-width:650px){.pt-lab{font-size:11px;padding:4px 8px}}
+body.view-screen #roomHeader,body.view-screen #panel,body.view-screen #bar,body.view-screen #hint{opacity:0;visibility:hidden;pointer-events:none}
+#roomHeader,#panel,#bar,#hint{transition:opacity .3s,visibility .3s}
+#viewNav{position:fixed;top:max(14px,env(safe-area-inset-top));left:14px;z-index:12;display:none;gap:6px;align-items:center}
+body.view-screen #viewNav{display:flex}
+#viewNav button,#bParts{font:600 12px Arial,sans-serif;color:var(--room-text,#fff0d9);background:var(--room-panel,#102a2dcc);border:1px solid var(--room-line,#c1a76a66);border-radius:20px;padding:6px 13px;cursor:pointer;backdrop-filter:blur(8px)}
+#viewNav button:hover,#bParts:hover{border-color:var(--room-accent,#e3b773)}
+#viewNav .sq{width:32px;padding:6px 0;font-size:17px;line-height:1}
+#bParts{display:none;margin-left:2px;padding:6px 11px}
+#bParts[aria-pressed="false"]{opacity:.55}
+.film-skip button{position:absolute;top:50%;z-index:6;width:46px;height:46px;border-radius:50%;transform:translateY(-50%);background:#0007;border:1px solid var(--room-line,#fff4);color:var(--room-text,#fff);font-size:28px;line-height:1;cursor:pointer;backdrop-filter:blur(6px);transition:background .2s}
+.film-skip button:hover{background:#000b}
+#filmPrev{left:clamp(10px,2vw,28px)}#filmNext{right:clamp(10px,2vw,28px)}
+.film-chapters{pointer-events:auto}.film-chapters i{cursor:pointer}
 </style></head><body>
 <main id="world" tabindex="-1" aria-label="Silverwork Room"></main>
 <div id="compatStage" hidden>
@@ -469,8 +494,8 @@ body:not(.room-entered) #srcCard,body.showcase-live #srcCard,body.view-screen #s
 <input id="fBg" type="file" accept="video/*" hidden><input id="fObj" type="file" accept="video/*" multiple hidden></details></aside>
 <aside id="srcCard" aria-label="Sources for this object" hidden><small>SOURCE · SCAN TO OPEN</small><a id="srcQr" target="_blank" rel="noopener" aria-label="Open the source"></a><b id="srcKind"></b><span id="srcName"></span><a id="srcLink" target="_blank" rel="noopener">Open source ↗</a></aside>
 <div id="hint">Drag to look around · scroll or pinch to zoom · tap the screen to watch</div>
-<nav id="bar" class="glass"><button id="prev" aria-label="Previous object">‹</button><div id="strip"></div><button id="next" aria-label="Next object">›</button></nav>
-<div id="wr" class="modal"></div><div id="vw" class="modal"></div><div id="toast" role="status"></div>
+<nav id="bar" class="glass"><button id="prev" aria-label="Previous object">‹</button><div id="strip"></div><button id="next" aria-label="Next object">›</button><button id="bParts" type="button" aria-pressed="true" title="Show or hide part labels (P)">Parts</button></nav>
+<div id="wr" class="modal"></div><div id="vw" class="modal"></div><div id="toast" role="status"></div><div id="partsLayer" aria-hidden="true"></div><div id="viewNav"><button id="vBack" type="button" title="Back to the room (Esc)">← Back</button><button id="vPrev" class="sq" type="button" aria-label="Previous object">‹</button><button id="vNext" class="sq" type="button" aria-label="Next object">›</button></div>
 <section id="intro" aria-labelledby="introT">
   <div class="entry-layout">
     <div class="entry-copy">
@@ -538,7 +563,7 @@ body:not(.room-entered) #srcCard,body.showcase-live #srcCard,body.view-screen #s
       <small>Press Enter to explore · Esc to leave</small>
     </div>
   </div>
-  <div class="film-chapters" id="filmChapters" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="film-skip"><button id="filmPrev" type="button" aria-label="Previous object">‹</button><button id="filmNext" type="button" aria-label="Next object">›</button></div><div class="film-chapters" id="filmChapters" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 </section>
 <div id="printExhibits" hidden></div>
 <script>
@@ -716,7 +741,16 @@ const cat=(arr,n)=>{const out=new Float32Array(arr.reduce((s,x)=>s+x.length,0));
 by.forEach((list,m)=>{if(list.length<2)return;const P=[],N=[],U=[];list.forEach(o=>{const ge=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone()).applyMatrix4(o.matrixWorld);P.push(ge.attributes.position.array);N.push(ge.attributes.normal.array);U.push(ge.attributes.uv.array);rm.push(o)});
 const bg=new T.BufferGeometry();bg.setAttribute('position',cat(P,3));bg.setAttribute('normal',cat(N,3));bg.setAttribute('uv',cat(U,2));g.add(new T.Mesh(bg,m))});
 rm.forEach(o=>{o.parent.remove(o);o.geometry.dispose()});return g}
-const built={},getObj=i=>built[i]||(built[i]=(()=>{const f=fit(mergeStatic(B[i]()),1.9);f.rotation.set(...OBJ[i][4]);return f})());
+/* v7 part anchors: [x,y,z] on the raw model, outward normal, one-line label */
+const CALL={
+'Silver khanjar':[[[0,1.4,.12],[0,0,1],'Hilt: the handle, shaped to fit the hand.'],[[0,2.5,.05],[0,1,.5],'Pommel: the rounded cap on top of the hilt.'],[[.4,-.2,.2],[0,0,1],'Silver plate: engraved with a flower pattern.'],[[.9,-.95,.17],[0,0,1],'Belt band: a zigzag pattern repeated along it.'],[[-1.7,-1.75,.15],[0,0,1],'Sheath: the curved case that holds the blade.']],
+'Engraved cuff':[[[.56,0,0],[1,0,0],'Engraved band: lines and dots cut by hand.'],[[.226,0,.468],[.5,0,.85],'Gold bead: finishes each open end.'],[[0,0,.6],[0,0,1],'Open gap: lets the cuff slip onto the wrist.'],[[.6,.3,0],[0,1,0],'Rim: the edge is filed smooth and polished.']],
+'Silver earrings':[[[.4,.31,0],[0,0,1],'Loop: the small ring that hooks through the ear.'],[[.53,.08,.04],[0,0,1],'Filigree disc: fine wire and grains soldered on.'],[[.4,0,.07],[0,0,1],'Red stone: one bright accent at the centre.'],[[.5,-.36,0],[0,0,1],'Bells: three tiny silver bells that chime.']],
+'Pendant necklace':[[[-.62,-.58,0],[0,0,1],'Chain: tiny rings joined link by link.'],[[0,-1.02,0],[0,0,1],'Bail ring: joins the pendant to the chain.'],[[.22,-1.15,.05],[0,0,1],'Pendant plate: patterned with wire and grains.'],[[.2,-1.82,0],[0,0,1],'Bells: they ring softly when the wearer moves.']],
+'Silver ring':[[[0,.74,0],[0,1,.3],'Red stone: often carnelian, polished smooth.'],[[.28,.58,0],[1,.5,0],'Bezel: the silver rim that holds the stone.'],[[0,.62,.27],[0,.5,1],'Grains: tiny silver beads around the stone.'],[[.58,0,0],[1,0,0],'Band: the silver loop that circles the finger.']],
+'Bob the cat':[[[.24,1.7,.3],[0,.5,1],'Ear: always listening for silver.'],[[0,1.5,-.95],[0,0,-1],'Tail: swishes while he guards the room.'],[[0,.98,.5],[0,.3,1],'Collar: a red ring with a tiny bell.']]};
+function addAnchors(g,title){(CALL[title]||[]).forEach((a,k)=>{const o=new T.Object3D();o.position.fromArray(a[0]);o.userData.anchor={n:a[1],txt:a[2],k};g.add(o)})}
+const built={},getObj=i=>built[i]||(built[i]=(()=>{const g0=B[i]();addAnchors(g0,OBJ[i][0]);const f=fit(mergeStatic(g0),1.9);f.rotation.set(...OBJ[i][4]);return f})());
 let outH=null,inH=null,tr=0,pendScr=false;
 function swap(i){hold.add(getObj(i));cur=i;exT=0;scene0=-1;playing=true;UI();applyScreen();chime()}
 function show(i){i=(i+N)%N;if(i===cur)return;forceEx=false;if(outH){scene.remove(outH);outH=null}
@@ -846,7 +880,7 @@ if (srcType==='ex') {
   if(now-lastDraw>66&&(hasWebGL?scrVis:!!view)){lastDraw=now;drawEx()}
 }
 const eT=era;if(Math.abs(eraV-eT)>.003){eraV+=(eT-eraV)*Math.min(1,dt*3);applyEra()}else if(eraV!==eT){eraV=eT;applyEra()}
-if (hasWebGL) renderer.render(scene,camera)
+if (hasWebGL) {sparkTick(now*.001);renderer.render(scene,camera);partsLayer.style.opacity=0}
 }
 $('#bThen').onclick=()=>setEra(1);$('#bNow').onclick=()=>setEra(0);
 $('#bPhoto').onclick=()=>{renderer.render(scene,camera);cvs.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='athar-'+OBJ[cur][0].toLowerCase().replace(/\W+/g,'-')+'.png';l.click();setTimeout(()=>URL.revokeObjectURL(u),3000);toast('Photo saved')})};
@@ -1057,6 +1091,7 @@ function applyRoomTheme(key, persist = true) {
   hemi.groundColor.set(palette.ground);
   dl.color.set(palette.key);
   dust.material.color.set(palette.trim);
+  tintSparks(palette);
   paintRoomSurfaces(palette);
   applyEra();
   if (studio) lightStudio(palette);
@@ -1103,6 +1138,7 @@ function buildStudio() {
   const specimen = new T.Group();
   stage.add(specimen);
   studio = {stage, viewCamera, backdrop, backdropCanvas, platform, ring, contact, fill, key, rim, specimen, size:null};
+  addStudioSparks(stage);
   lightStudio(ROOM_THEMES[roomTheme]);
   return studio;
 }
@@ -1122,6 +1158,7 @@ function lightStudio(palette) {
   studio.fill.groundColor.set(palette.ground);
   studio.key.color.set(palette.key);
   studio.rim.color.set(palette.rim);
+  tintSparks(palette);
 }
 
 function setStudioObject(index) {
@@ -1163,7 +1200,9 @@ function drawStudio(shot, progress, elapsed) {
   key.position.x = -2.6 + (filmMotion.matches ? 0 : Math.sin(elapsed * .45) * 1.1);
   rim.intensity = 2.7 + (filmMotion.matches ? 0 : Math.sin(elapsed * .43) * .43);
   renderer.toneMappingExposure = ROOM_THEMES[roomTheme].exposure;
+  sparkTick(performance.now()*.001);
   renderer.render(studio.stage, viewCamera);
+  coDraw(performance.now(), viewCamera, studio.specimen, 1 - (parseFloat($('#filmFade').style.opacity) || 0));
 }
 
 function updateFilmChapter(chapter, shotIndex) {
@@ -1174,7 +1213,7 @@ function updateFilmChapter(chapter, shotIndex) {
   $('#filmTitle').textContent = title;
   $('#filmNumber').textContent = String(chapter + 1).padStart(2, '0') + ' / 05';
   $('#filmIllustration').setAttribute('href', '#' + ART_IDS[title]);
-  if (hasWebGL) setStudioObject(showcase.index);
+  if (hasWebGL) { setStudioObject(showcase.index); coSet(studio.specimen, 1400); }
 }
 
 function drawShowcase(dt) {
@@ -1247,6 +1286,7 @@ function stopShowcase(explore = false) {
   }
   if (showcase.resumeVideo && (!explore || sameObject) && srcType === 'vid' && !document.hidden) vid.play().catch(() => {});
   showcase.resumeVideo = false;
+  roomCoReset();
 }
 
 function updateIllustration() {
@@ -1299,6 +1339,7 @@ $('#cinematicTour').addEventListener('wheel', event => {
 }, {passive:false});
 addEventListener('keydown', event => {
   if (!showcase.active || event.key === 'Tab') return;
+  if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); event.stopImmediatePropagation(); jumpShowcase(event.key === 'ArrowRight' ? 1 : -1); return; }
   event.preventDefault();
   event.stopImmediatePropagation();
   stopShowcase(event.key === 'Enter' || event.key === ' ');
@@ -1380,6 +1421,121 @@ function syncSrc(){const c=$('#srcCard'),o=cur===BOB?null:EXPO.objects.find(x=>x
  $('#srcQr').href=$('#srcLink').href=s.url;$('#srcKind').textContent=s.kind;$('#srcName').textContent=s.name}
 {const _UI=UI;UI=function(){_UI();syncSrc();syncMedia()}}
 {const _sv=setView;setView=function(v){_sv(v);document.body.classList.toggle('view-screen',!!v)}}
+
+
+/* ================= v7 ================= */
+const SPARK_VS=`uniform float uTime,uScale,uSize,uStar,uSpeed,uH;attribute vec4 aSeed;varying float vA;
+void main(){vec3 p=position;float y=mod(aSeed.y*uH+uTime*uSpeed*(.4+aSeed.x),uH);p.y+=y-uH*.5;
+p.x+=sin(uTime*.5*(.5+aSeed.x)+aSeed.z*6.283)*.18*(.3+aSeed.w);p.z+=cos(uTime*.4*(.5+aSeed.w)+aSeed.z*6.283)*.18*(.3+aSeed.x);
+vec4 mv=modelViewMatrix*vec4(p,1.);float tw=mix(1.,pow(.5+.5*sin(uTime*(1.2+aSeed.x*2.8)+aSeed.z*6.283),3.),uStar);
+vA=sin(3.14159*y/uH)*tw;gl_PointSize=uSize*(.55+aSeed.w)*uScale/max(.1,-mv.z)*(.7+.6*tw*uStar);gl_Position=projectionMatrix*mv;}`;
+const SPARK_FS=`uniform vec3 uColor;uniform float uStar;varying float vA;
+void main(){vec2 c=gl_PointCoord-.5;float d=length(c);float s=pow(max(0.,1.-d*2.),2.2);
+float cr=(exp(-abs(c.x)*46.)*max(0.,1.-abs(c.y)*2.)+exp(-abs(c.y)*46.)*max(0.,1.-abs(c.x)*2.))*uStar;
+float a=(s+cr*.9)*vA;if(a<.01)discard;gl_FragColor=vec4(uColor,a);}`;
+const SPARKS=[];let HALOS=[];
+const HALO_TEX=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),g=x.createRadialGradient(128,128,0,128,128,128);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.35,'rgba(255,255,255,.26)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,256,256);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t})();
+function addSpark(parent,kind,n,cx,cy,cz,sx,sz,h,size,star,speed,fov){
+  const pos=new Float32Array(n*3),sd=new Float32Array(n*4);
+  for(let i=0;i<n;i++){pos[i*3]=cx+(Math.random()-.5)*sx;pos[i*3+1]=cy;pos[i*3+2]=cz+(Math.random()-.5)*sz;for(let k=0;k<4;k++)sd[i*4+k]=Math.random()}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('aSeed',new T.BufferAttribute(sd,4));
+  const mat=new T.ShaderMaterial({uniforms:{uTime:{value:0},uScale:{value:800},uSize:{value:size},uStar:{value:star},uSpeed:{value:speed},uH:{value:h},uColor:{value:new T.Color(1,.9,.7)}},vertexShader:SPARK_VS,fragmentShader:SPARK_FS,transparent:true,depthWrite:false,blending:T.AdditiveBlending});
+  const pts=new T.Points(g,mat);pts.frustumCulled=false;parent.add(pts);SPARKS.push({pts,mat,kind,star,fov});
+}
+function addHalo(parent,kind,x,y,z,s){const h=new T.Sprite(new T.SpriteMaterial({map:HALO_TEX,transparent:true,opacity:.32,depthWrite:false,blending:T.AdditiveBlending}));h.position.set(x,y,z);h.scale.set(s,s,1);h.userData.kind=kind;parent.add(h);HALOS.push(h)}
+addSpark(scene,'room',240,OX,2.3,OZ+.3,9,7,4.6,.028,0,.12,50);
+addSpark(scene,'room',64,OX,PH+1.1,OZ,3.2,2.6,2.4,.075,1,.06,50);
+addHalo(scene,'room',OX,HY+.05,OZ-1,4.4);
+function addStudioSparks(stage){
+  for(let i=SPARKS.length-1;i>=0;i--)if(SPARKS[i].kind==='studio')SPARKS.splice(i,1);
+  HALOS=HALOS.filter(h=>h.userData.kind!=='studio');
+  addSpark(stage,'studio',140,0,0,0,4.4,3.6,3.4,.02,0,.1,43);
+  addSpark(stage,'studio',54,0,0,0,3,2.6,2.6,.05,1,.05,43);
+  addHalo(stage,'studio',0,0,-1.3,4.2);
+}
+function tintSparks(p){
+  const c=h=>{const k=new T.Color(h);if(k.convertLinearToSRGB)k.convertLinearToSRGB();return k};
+  const trim=c(p.trim),key=c(p.key),white=new T.Color(1,1,1);
+  SPARKS.forEach(s=>{const u=s.mat.uniforms.uColor.value;if(s.star)u.copy(key).lerp(white,.35).multiplyScalar(1.5);else u.copy(trim).multiplyScalar(1.25)});
+  HALOS.forEach(h=>h.material.color.set(p.key));
+}
+function sparkTick(t){
+  const tt=filmMotion.matches?0:t;
+  SPARKS.forEach(s=>{const u=s.mat.uniforms;u.uTime.value=tt;u.uScale.value=innerHeight*PR/(2*Math.tan(s.fov*Math.PI/360))});
+  const pulse=.32+.07*Math.sin(tt*.8);HALOS.forEach(h=>h.material.opacity=pulse);
+}
+
+/* --- part labels: small arrows that fade in one by one --- */
+const partsLayer=$('#partsLayer'),CO={on:true,anchors:[],t0:0,els:[]};
+const cV1=new T.Vector3(),cV2=new T.Vector3(),cV3=new T.Vector3(),cV4=new T.Vector3();
+function coSet(root,delay){
+  CO.anchors=[];if(root)root.traverse(o=>{if(o.userData&&o.userData.anchor)CO.anchors.push(o)});
+  CO.anchors.sort((a,b)=>a.userData.anchor.k-b.userData.anchor.k);
+  CO.t0=performance.now()+delay;partsLayer.textContent='';
+  CO.els=CO.anchors.map(a=>{const e=document.createElement('div');e.className='pt';e.innerHTML='<i class="pt-line"></i><b class="pt-lab"></b>';e.lastChild.textContent=a.userData.anchor.txt;partsLayer.appendChild(e);return{e,line:e.firstChild,lab:e.lastChild}});
+}
+function roomCoReset(){coSet(null,0)}
+function coDraw(now,cam,centerObj,mult){
+  const A=CO.anchors,n=A.length;
+  if(!CO.on||!n||mult<=.01){partsLayer.style.opacity=0;return}
+  partsLayer.style.opacity=1;
+  const W=innerWidth,H=innerHeight,L0=clamp(Math.min(W,H)*.1,46,78);
+  centerObj.getWorldPosition(cV1).project(cam);const cx=(cV1.x*.5+.5)*W,cy=(-cV1.y*.5+.5)*H,items=[];
+  for(let j=0;j<n;j++){
+    const a=A[j],d=a.userData.anchor;a.getWorldPosition(cV1);
+    cV2.copy(cam.position).sub(cV1).normalize();
+    cV3.set(d.n[0],d.n[1],d.n[2]).transformDirection(a.matrixWorld);
+    const face=clamp((cV3.dot(cV2)+.05)/.4,0,1);
+    cV1.project(cam);const ax=(cV1.x*.5+.5)*W,ay=(-cV1.y*.5+.5)*H;
+    const p=clamp((now-CO.t0-j*850)/900,0,1),ez=1-Math.pow(1-p,3);
+    let dx=ax-cx,dy=(ay-cy)*.6,m=Math.hypot(dx,dy);
+    if(m<24){const g=-.9+j*1.35;dx=Math.cos(g);dy=Math.sin(g);m=1}
+    dx/=m;dy/=m;if(dx>0&&ax+dx*L0>W-190)dx=-dx;if(dx<0&&ax+dx*L0<190)dx=-dx;
+    items.push({j,ax,ay,lx:ax+dx*L0,ly:clamp(ay+dy*L0,92,H-130),ez,face});
+  }
+  const sorted=items.slice().sort((a,b)=>a.ly-b.ly);
+  for(let i=1;i<sorted.length;i++){const a=sorted[i-1],b=sorted[i];if((a.lx>=a.ax)===(b.lx>=b.ax)&&Math.abs(b.ly-a.ly)<26&&Math.abs(b.lx-a.lx)<170)b.ly=a.ly+26}
+  items.forEach(it=>{
+    const o=CO.els[it.j],rx=it.lx-it.ax,ry=it.ly-it.ay,len=Math.hypot(rx,ry);
+    o.e.style.opacity=(.75*it.ez*it.face*mult).toFixed(3);
+    o.e.style.transform='translate('+it.ax.toFixed(1)+'px,'+it.ay.toFixed(1)+'px)';
+    o.line.style.width=(len*it.ez).toFixed(1)+'px';
+    o.line.style.transform='rotate('+Math.atan2(ry,rx).toFixed(4)+'rad)';
+    o.lab.style.opacity=clamp((it.ez-.55)/.45,0,1).toFixed(3);
+    o.lab.style.textAlign=rx>=0?'left':'right';
+    o.lab.style.transform=rx>=0?'translate('+(rx+6)+'px,'+ry+'px) translate(0,-50%)':'translate('+(rx-6)+'px,'+ry+'px) translate(-100%,-50%)';
+  });
+}
+{const _U=UI;UI=function(){_U();if(!showcase.active)roomCoReset()}}
+$('#bParts').onclick=()=>{CO.on=!CO.on;$('#bParts').setAttribute('aria-pressed',String(CO.on));if(CO.on)CO.t0=performance.now()+200;toast(CO.on?'Part labels on':'Part labels off')};
+
+/* --- clean screen view: other UI hides, small back button shows --- */
+$('#vBack').onclick=()=>setView(0);
+$('#vPrev').onclick=()=>show(cur-1);
+$('#vNext').onclick=()=>show(cur+1);
+addEventListener('keydown',e=>{
+  if(showcase.active||document.querySelector('dialog[open],#wr.on,#vw.on')||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(e.key==='Escape'&&view)setView(0);
+  else if((e.key==='p'||e.key==='P')&&false)$('#bParts').click();
+});
+
+/* --- showcase: skip to any object whenever you like --- */
+function jumpShowcase(d){
+  if(!showcase.active)return;const n=FILM_ORDER.length;
+  const c=((Math.max(0,showcase.chapter)+d)%n+n)%n;
+  showcase.elapsed=c*OBJECT_SECONDS+.01;lastIn=performance.now();
+}
+$('#filmPrev').onclick=e=>{e.stopPropagation();jumpShowcase(-1)};
+$('#filmNext').onclick=e=>{e.stopPropagation();jumpShowcase(1)};
+$('#filmChapters').addEventListener('click',e=>{
+  e.stopPropagation();const i=[...$('#filmChapters').children].indexOf(e.target.closest('i'));
+  if(i>=0)jumpShowcase(i-Math.max(0,showcase.chapter));
+});
+{let sx=0,sy=0,swipedAt=0;const tour=$('#cinematicTour');
+  tour.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY});
+  tour.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>70&&Math.abs(dy)<60){swipedAt=performance.now();jumpShowcase(dx<0?1:-1)}});
+  tour.addEventListener('click',e=>{if(performance.now()-swipedAt<400){e.stopImmediatePropagation();e.preventDefault()}},true);
+}
 
 applyRoomTheme(roomTheme, false);
 swap(1);
